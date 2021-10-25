@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[164]:
+# In[13]:
 
 
 get_ipython().run_line_magic('matplotlib', 'inline')
@@ -17,7 +17,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
 
-# In[165]:
+# In[14]:
 
 
 #Read in the dataset
@@ -29,14 +29,14 @@ df['Date']=df['Date'].map(dt.datetime.toordinal)
 df = df.drop(columns=["Open", "Low","High", "Adj Close", "Volume"])
 
 
-# In[166]:
+# In[15]:
 
 
 #Creating a new feature that calculates the 50 day MA
 df['MA50'] = df.rolling(window=50)["Close"].mean()
 
 
-# In[167]:
+# In[16]:
 
 
 #Plotting the MA50 against the closing price for illustration
@@ -44,46 +44,26 @@ ax1 = df.plot(kind='line', x='Date', y='Close', color='r')
 ax2 = df.plot(kind='line', x='Date', y='MA50', color='g', ax=ax1)
 
 
-# In[168]:
+# In[100]:
 
 
-#There is a high correlation between the closing price and the MA50, so we can try to train the
-#model based on the MA50, 
-corrMatrix.style.background_gradient(cmap='coolwarm')
-
-
-# In[169]:
-
-
-#SCALE THE VALUES
-#x = df.values 
-#scaler = preprocessing.MinMaxScaler().fit(x)
-#x = scaler.transform(x)
-#df = pd.DataFrame(x)
 df = df.iloc[50: , :] # The first 50 rows is used to calculate MA50 and will be nan. Let's drop.
-df.head()
 
 
-# In[170]:
-
-
-#df.tail()
-
-
-# In[171]:
+# In[20]:
 
 
 X = pd.DataFrame(df["Close"]) 
 y = pd.DataFrame(df["MA50"])
 
 
-# In[172]:
+# In[21]:
 
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
 
 
-# In[173]:
+# In[22]:
 
 
 linear_regressor = LinearRegression()
@@ -91,7 +71,7 @@ linear_regressor.fit(X_train, y_train)
 Y_pred = linear_regressor.predict(X_train)  
 
 
-# In[174]:
+# In[23]:
 
 
 plt.scatter(X_train, y_train)             
@@ -100,7 +80,7 @@ plt.show()
 print( "MSE = "+str(metrics.mean_squared_error(y_train,Y_pred))) #Calculate MSE
 
 
-# In[175]:
+# In[24]:
 
 
 Y_pred = linear_regressor.predict(X_test)  
@@ -110,65 +90,30 @@ plt.show()
 print( "MSE = "+str(metrics.mean_squared_error(y_test,Y_pred)))
 
 
-# In[176]:
+# In[86]:
 
 
-print(linear_regressor.predict([[800]]))
+# Write date on this form Jun 1 2017  1:33PM
+def predictOnDate(date):
+    date_time_obj = dt.datetime.strptime(date,'%b %d %Y')
+    date_time_obj = date_time_obj.toordinal()
+    close = df.loc[df['Date'] == date_time_obj]['Close']
+    prediction = linear_regressor.predict([[close.values[0]]])[0][0] # i know this syntax is so off prob some better way to do it
+    close = close.values[0]
+    print("CLOSING PRICE: " +  str(close) + "\n" + "PREDICTED PRICE: " + str(prediction))
+    print(metrics.mean_squared_error([close], [prediction]))
 
 
-# In[177]:
+# In[101]:
 
 
-#print(Y_pred)
-
-
-# In[178]:
-
-
-#print(df.iloc[1000])
-
-
-# In[179]:
-
-
-#print(Y_pred[1000][0])
-
-
-# In[180]:
-
-
-date_time_str = 'Jun 1 2017  1:33PM'
-date_time_obj = dt.datetime.strptime(date_time_str,'%b %d %Y %I:%M%p')
-
-
-# In[181]:
-
-
-print(dt.datetime.toordinal(date_time_obj))
-
-
-# In[198]:
-
-
-#idx = df.index[df['Date']==736481].tolist()[0]
-#print(idx)
-#print(idx_minus_50)
-close = df.loc[df['Date'] == 736481]['Close']
-print(linear_regressor.predict([[close.values[0]]]))
-print(close.values[0])
-print(metrics.mean_squared_error([64], [68]))
-
-
-# In[183]:
-
-
-#df2 = df.iloc[idx_minus_50: idx, :]
-#df2['MA502'] = df2.rolling(window=50)["Close"].mean()
-#print(df2)
+predictOnDate('Dec 31 2019')
 
 
 # In[ ]:
 
 
-
+#For some reason it only works until Dec 31 2019, not quite sure why
+#In real life MA50 obviously wouldn't be the best way to train the algo
+# but i assume that is out of the scope of the task
 
